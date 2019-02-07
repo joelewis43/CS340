@@ -18,6 +18,10 @@ app.get('/login',function(req, res){
   res.render('login');
 });
 
+app.get('/employee', function(req, res){
+  res.render('employee');
+});
+
 
 /**************ROUTE HANDLERS*************/
 
