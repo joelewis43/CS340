@@ -22,6 +22,17 @@ app.get('/employee', function(req, res){
   res.render('employee');
 });
 
+app.get('/clockIO', function(req, res){
+  res.render('clockIO');
+});
+
+app.get('/timesheet', function(req, res){
+  res.render('timesheet');
+});
+
+app.get('/register', function(req, res){
+  res.render('register');
+});
 
 /**************ROUTE HANDLERS*************/
 

@@ -18,8 +18,12 @@ li a, .dropbtn {
     text-decoration: none;
 }
 
-#right {
-    float: right;
+#right{
+  float: right;
+}
+
+#right a{
+  display: inline-block;
 }
 
 li a:hover, .dropdown:hover .dropbtn {
@@ -38,7 +42,7 @@ li.dropdown {
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
 }
-  
+
 .dropdown-content a {
     color: black;
     padding: 12px 16px;
@@ -46,11 +50,11 @@ li.dropdown {
     display: block;
     text-align: left;
 }
-  
+
 .dropdown-content a:hover {
-    background-color: #c2c2d6
+    background-color: #c2c2d6;
 }
-  
+
 .dropdown:hover .dropdown-content {
     display: block;
 }
@@ -65,4 +69,20 @@ div label {
 
 body {
     background-color: #f0f0f5;
+}
+
+#tableTimesheet {
+  text-align: left;
+  border-collapse: collapse;
+}
+
+#tableTimesheet tr td {
+  padding-right: 10px;
+  padding-bottom: 3px;
+  padding-top: 3px;
+}
+
+#tableTimesheet tr:hover td{
+  background-color: #c2c2d6;
+  border-color: #c2c2d6;
 }
