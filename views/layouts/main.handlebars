@@ -10,27 +10,38 @@
 	<div class="ui vertical segment" style="padding: 0">
 		<ul>
 			<li><a href="/">Home</a></li>
+			<li><a href="/meetVendors">Meet Our Vendors</a></li>
+			<li><a href="/meetCustomers">Meet Our Customers</a></li>
 
 			<li id="right">
-				<a href="/login">Log In</a>
-				<a href="/register">Register</a>
+				{{#unless logIn}}
+					<a href="/login">Log In</a>
+					<a href="/register">Register</a>
+				{{else}}
+					<a href="/logOut">Log Out</a>
+				{{/unless}}
 			</li>
-			<li class="dropdown" id="right">
-				<a class="dropbtn">Employee</a>
-				<div class="dropdown-content">
-					<a href="/clockIO">Time Clock</a>
-					<a href="/timesheet">View Hours</a>
-					<a href="/sales">Sales</a>
-					<a href="/stock">Stock</a>
-				</div>
-			</li>
-			<li class="dropdown" id="right">
-				<a class="dropbtn">Customer</a>
-				<div class="dropdown-content">
-					<a href="/clockIO">Purchases</a>
-					<a href="/timesheet">Rewards</a>
-				</div>
-			</li>
+			{{#if vendor}}
+				<li class="dropdown" id="right">
+					<a class="dropbtn">Employee</a>
+					<div class="dropdown-content">
+						<a href="/clockIO">Time Clock</a>
+						<a href="/timesheet">View Hours</a>
+						<a href="/sales">Sales</a>
+						<a href="/stock">Stock</a>
+						<a href="/newSpace">Add a Space</a>
+					</div>
+				</li>
+			{{/if}}
+			{{#if customer}}
+				<li class="dropdown" id="right">
+					<a class="dropbtn">Customer</a>
+					<div class="dropdown-content">
+						<a href="/Purchases">Purchases</a>
+						<a href="/Rewards">Rewards</a>
+					</div>
+				</li>
+			{{/if}}
 		</ul>
 	</div>
 
