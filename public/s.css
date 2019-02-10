@@ -23,7 +23,11 @@ li a, .dropbtn {
 }
 
 #right a{
-  display: inline-block;
+    /*
+        I think it looks better a vertical list (block)
+        than it does compounded into fewer rows (inline)
+    */
+  display: block;
 }
 
 li a:hover, .dropdown:hover .dropbtn {

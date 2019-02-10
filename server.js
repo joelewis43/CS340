@@ -21,6 +21,7 @@ function globalContext(req) {
 }
 
 /**************TEST VARIABLES*************/
+//For Meet vendors and customers
 let people = [
   {
     name: 'Joe Lewis',
@@ -32,6 +33,7 @@ let people = [
   }
 ];
 
+//For customer purchases page
 let purchases = [
   {
     id: 50,
@@ -47,6 +49,7 @@ let purchases = [
   }
 ];
 
+//For vendor sales page
 let sales = [
   {
     id: 50,
@@ -60,6 +63,7 @@ let sales = [
   }
 ];
 
+//For home page stock
 let items = [
   {
     id: 50,
@@ -133,15 +137,17 @@ app.get('/logIn',function(req, res){
 
 app.get('/logOut',function(req, res){
 
-  //clear logIn and customer/vendor flag
+  //clear session login data
   req.session.logIn = 0;
   req.session.customer = 0;
   req.session.vendor = 0;
   req.session.name = 0;
-  
-  let context = globalContext(req);
 
-  res.render('home', context);
+  res.writeHead(302, {
+    'Location': '/'
+  });
+  res.end();
+  return;
 });
 
 app.get('/employee', function(req, res){
@@ -218,6 +224,20 @@ app.get('/Rewards', function(req, res){
   context.value = 1;
 
   res.render('rewards', context);
+});
+
+app.get('/addItem', function(req, res){
+
+  let context = globalContext(req);
+
+  res.render('addItem', context);
+});
+
+app.get('/addTransaction', function(req, res){
+
+  let context = globalContext(req)
+
+  res.render('addTransaction', context);
 });
 /**************ROUTE HANDLERS*************/
 

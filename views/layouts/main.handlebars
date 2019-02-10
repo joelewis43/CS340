@@ -13,14 +13,13 @@
 			<li><a href="/meetVendors">Meet Our Vendors</a></li>
 			<li><a href="/meetCustomers">Meet Our Customers</a></li>
 
-			<li id="right">
-				{{#unless logIn}}
-					<a href="/login">Log In</a>
-					<a href="/register">Register</a>
-				{{else}}
-					<a href="/logOut">Log Out</a>
-				{{/unless}}
-			</li>
+			{{#unless logIn}}
+				<li id="right"><a href="/register">Register</a></li>
+				<li id="right"><a href="/login">Log In</a></li>
+			{{else}}
+					<li id="right"><a href="/logOut">Log Out</a></li>
+			{{/unless}}
+			
 			{{#if vendor}}
 				<li class="dropdown" id="right">
 					<a class="dropbtn">Employee</a>
@@ -29,6 +28,8 @@
 						<a href="/timesheet">View Hours</a>
 						<a href="/sales">Sales</a>
 						<a href="/newSpace">Add a Space</a>
+						<a href="/addItem">Add an Item</a>
+						<a href="/addTransaction">Add Transaction</a>
 					</div>
 				</li>
 			{{/if}}
