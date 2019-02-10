@@ -71,18 +71,19 @@ body {
     background-color: #f0f0f5;
 }
 
-#tableTimesheet {
+#table {
   text-align: left;
   border-collapse: collapse;
+  min-width: 100%;
 }
 
-#tableTimesheet tr td {
+#table tr td {
   padding-right: 10px;
   padding-bottom: 3px;
   padding-top: 3px;
 }
 
-#tableTimesheet tr:hover td{
+#table tr:hover td{
   background-color: #c2c2d6;
   border-color: #c2c2d6;
 }

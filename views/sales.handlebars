@@ -1,0 +1,22 @@
+{{#if name}}
+    <h3>{{name}}'s Sales</h3>
+{{else}}
+    <h3>Your Sales</h3>
+{{/if}}
+
+<div class="ui segment">
+    <table id="table">
+        <tr>
+            <th>Name</th>
+            <th>Cost</th>
+        </tr>
+
+        {{#each sale}}
+            <tr>
+                <td>{{this.name}}</td>
+                <td>${{this.cost}}</td>
+            </tr>
+        {{/each}}
+
+    </table>
+</div>

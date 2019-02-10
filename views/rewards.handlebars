@@ -1,0 +1,16 @@
+<div>
+    <h3>Store Rewards Overview</h3>
+</div>
+
+<div class="ui segment">
+    {{#if points}}
+        <h5>You have {{points}} points left!</h5>
+        <h7>This translates to ${{value}} in store credit.</h7>
+    {{else}}
+        <h5>You have no rewards left :-(</h5>
+        <h7>
+            Rewards point are automatically added <br>
+            to your account when you make a purchase.
+        </h7>
+    {{/if}}
+</div>

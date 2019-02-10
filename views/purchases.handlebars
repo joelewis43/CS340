@@ -1,0 +1,22 @@
+<div>
+    <h3>Here are your purchases</h3>
+</div>
+
+<div class="ui segment">
+    <table id="table">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Cost</th>
+        </tr>
+
+        {{#each purchase}}
+            <tr>
+                <td>{{this.name}}</td>
+                <td>{{this.description}}</td>
+                <td>{{this.cost}}</td>
+            </tr>
+        {{/each}}
+
+    </table>
+</div>

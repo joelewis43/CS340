@@ -1,12 +1,36 @@
 <div>
 
-    <h1 style="padding-bottom: 25px">Welcome to Antiques-R-Us</h1>
+    {{#if name}}
+        <h1 style="padding-bottom: 25px">Welcome {{name}}, to Antiques-R-Us</h1>
+    {{else}}
+        <h1 style="padding-bottom: 25px">Welcome to Antiques-R-Us</h1>
+    {{/if}}
 
     <div class="ui segment">
         <form class="ui form" action="/search-results">
             <h4>Search the Store!</h4>
             <input type="text" name="search" placeholder="Search"/>
         </form>
+    </div>
+
+    <h2>Our Current Stock</h2>
+    <div class="ui segment">
+        <table id="table">
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Cost</th>
+            </tr>
+
+            {{#each item}}
+                <tr>
+                    <td>{{this.name}}</td>
+                    <td>{{this.description}}</td>
+                    <td>${{this.cost}}</td>
+                </tr>
+            {{/each}}
+
+        </table>
     </div>
 
 </div>

@@ -15,15 +15,90 @@ function globalContext(req) {
   return {
     logIn: req.session.logIn,
     vendor: req.session.vendor,
-    customer: req.session.customer
+    customer: req.session.customer,
+    name: req.session.name
   }
 }
 
+/**************TEST VARIABLES*************/
+let people = [
+  {
+    name: 'Joe Lewis',
+    description: 'A developer'
+  },
+  {
+    name: 'Alex Guyer',
+    description: 'Another developer'
+  }
+];
+
+let purchases = [
+  {
+    id: 50,
+    name: 'Lamp',
+    description: "Moths love this.",
+    cost: 20
+  },
+  {
+    id: 3,
+    name: 'Vinyl',
+    description: "Probably makes noise.",
+    cost: 8
+  }
+];
+
+let sales = [
+  {
+    id: 50,
+    name: 'Lamp',
+    cost: 20
+  },
+  {
+    id: 6,
+    name: 'Robot Toy',
+    cost: 85
+  }
+];
+
+let items = [
+  {
+    id: 50,
+    name: 'Lamp',
+    description: "Moths love this.",
+    cost: 20
+  },
+  {
+    id: 3,
+    name: 'Vinyl',
+    description: "Probably makes noise.",
+    cost: 8
+  },
+  {
+    id: 6,
+    description: "Beep boop",
+    name: 'Robot Toy',
+    cost: 85
+  },
+  {
+    id: 14,
+    description: "Moths also love this.",
+    name: 'Wool Sweater',
+    cost: 150
+  },
+  {
+    id: 57,
+    description: "Take it or leave it",
+    name: 'Original Picasso',
+    cost: 20
+  }
+];
+/**************TEST VARIABLES*************/
 
 /**************ROUTE HANDLERS*************/
 app.get('/',function(req,res){
 
   let context = globalContext(req);
+  context.item = items;
 
   res.render('home', context);
 });
@@ -34,8 +109,15 @@ app.get('/logIn',function(req, res){
   //and redirect user to home page
   if (req.query.logIn) {
     req.session.logIn = req.query.logIn || 0;
-    req.session.customer = req.query.customer || 0;
-    req.session.vendor = req.query.vendor || 0;
+    req.session.name = req.query.Fname || null;
+    
+    if (req.query.accType == "employee") {
+      req.session.vendor = 1;
+    }
+    else {
+      req.session.customer = 1;
+    }
+
     res.writeHead(302, {
       'Location': '/'
     });
@@ -55,6 +137,7 @@ app.get('/logOut',function(req, res){
   req.session.logIn = 0;
   req.session.customer = 0;
   req.session.vendor = 0;
+  req.session.name = 0;
   
   let context = globalContext(req);
 
@@ -89,6 +172,53 @@ app.get('/register', function(req, res){
   res.render('register', context);
 });
 
+app.get('/meetCustomers', function(req, res){
+
+  let context = globalContext(req);
+  context.customers = people;
+
+  res.render('meetCustomers', context);
+});
+
+app.get('/meetVendors', function(req, res){
+
+  let context = globalContext(req);
+  context.vendors = people;
+
+  res.render('meetVendors', context);
+});
+
+app.get('/sales', function(req, res){
+
+  let context = globalContext(req);
+  context.sale = sales;
+
+  res.render('sales', context);
+});
+
+app.get('/newSpace', function(req, res){
+
+  let context = globalContext(req);
+
+  res.render('newSpace', context);
+});
+
+app.get('/Purchases', function(req, res){
+
+  let context = globalContext(req);
+  context.purchase = purchases;
+
+  res.render('purchases', context);
+});
+
+app.get('/Rewards', function(req, res){
+
+  let context = globalContext(req);
+  context.points = 100;
+  context.value = 1;
+
+  res.render('rewards', context);
+});
 /**************ROUTE HANDLERS*************/
 
 
