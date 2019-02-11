@@ -22,13 +22,27 @@
                 <th>Cost</th>
             </tr>
 
-            {{#each item}}
-                <tr>
-                    <td>{{this.name}}</td>
-                    <td>{{this.description}}</td>
-                    <td>${{this.cost}}</td>
-                </tr>
-            {{/each}}
+            {{#if vendor}}
+                {{#each item}}
+                    <tr>
+                        <form>
+                            <td><input type="text" name="name" value="{{this.name}}"></input></td>
+                            <td><input type="text" name="description" value="{{this.description}}"></input></td>
+                            <td><input type="text" name="cost" value="${{this.cost}}"></input></td>
+                            <td><div class="ui submit button">Update</td>
+                            <td><div class="ui submit button">Delete</td>
+                        </form>
+                    </tr>
+                {{/each}}
+            {{else}}
+                {{#each item}}
+                    <tr>
+                        <td>{{this.name}}</td>
+                        <td>{{this.description}}</td>
+                        <td>${{this.cost}}</td>
+                    </tr>
+                {{/each}}
+            {{/if}}
 
         </table>
     </div>
