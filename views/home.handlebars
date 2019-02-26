@@ -14,26 +14,28 @@
     </div>
 
     {{#if vendor}}
-        <h2>Add an item</h2>
-	<form class="ui form" action="/createItem" method="POST">
-            <div>
-                <input type="text" name="name" placeholder="Name"/>
-                <input type="text" name="description" placeholder="Description"/>
-            </div>
+    	<div class="ui segment">
+            <h2>Add an item</h2>
+    	    <form class="ui form" action="/createItem" method="post">
+                <div>
+                    <input type="text" name="name" placeholder="Name"/>
+                    <input type="text" name="description" placeholder="Description"/>
+                </div>
 
-            <input class="ui submit button" type="submit"/>
-        </form>
+                <input class="ui submit button" type="submit"/>
+            </form>
 	
-	<h2>Add an item to an existing space</h3>
-        <form class="ui form" action="/createSpaceItem" method="POST">
-            <div>
-                <input type="text" name="item_id" placeholder="Item ID"/>
-                <input type="text" name="space_id" placeholder="Space ID"/>
-                <input type="text" name="cost" placeholder="Cost"/>
-            </div>
+	    <h2>Add an item to an existing space</h3>
+            <form class="ui form" action="/createSpaceItem" method="POST">
+                <div>
+                    <input type="text" name="item_id" placeholder="Item ID"/>
+                    <input type="text" name="space_id" placeholder="Space ID"/>
+                    <input type="text" name="cost" placeholder="Cost"/>
+                </div>
 
-            <input class="ui submit button" type="submit"/>
-        </form> 
+                <input class="ui submit button" type="submit"/>
+            </form> 
+	</div>
     {{/if}}
 
     <div class="ui segment">

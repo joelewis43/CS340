@@ -3,6 +3,7 @@ var express = require('express');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var session = require('express-session');
+var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 10,
@@ -21,6 +22,10 @@ app.set('view engine', 'handlebars');
 app.set('port', 7824);
 app.use(express.static(__dirname + '/public'));
 app.use(session({secret: 'SuperSecretPassword'}));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+app.use(bodyParser.json());
 
 /******************SETUP******************/
 
@@ -334,6 +339,40 @@ app.get('/addTransaction', function(req, res){
   let context = globalContext(req)
 
   res.render('addTransaction', context);
+});
+
+app.post('/createItem', function(req, res){
+  let context = globalContext(req);
+  var sql = mysql.format('INSERT INTO items(name, description) VALUE(?, ?)', [req.body.name, req.body.description]);
+  pool.query(sql,
+  function(error, results, fields){
+    if(error){
+      console.log(error);
+      res.render('500', context);
+      return;
+    }
+    res.writeHead('302', {
+      Location: '/'
+    });
+    res.end();
+  });
+});
+
+app.post('/createSpaceItem', function(req, res){
+  let context = globalContext(req);
+  var sql = mysql.format('INSERT INTO space_items(space_id, item_id, unit_price) VALUE(?, ?, ?)', [req.body.space_id, req.body.item_id, req.body.cost]);
+  pool.query(sql,
+  function(error, results, fields){
+    if(error){
+      console.log(error);
+      res.render('500', context);
+      return;
+    }
+    res.writeHead('302', {
+      Location: '/'
+    });
+    res.end();
+  });
 });
 /**************ROUTE HANDLERS*************/
 
