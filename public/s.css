@@ -75,19 +75,23 @@ body {
     background-color: #f0f0f5;
 }
 
-#table {
+#table .itemTable {
   text-align: left;
   border-collapse: collapse;
   min-width: 100%;
 }
 
-#table tr td {
+#table tr td, .itemTable tr td {
   padding-right: 10px;
   padding-bottom: 3px;
   padding-top: 3px;
 }
 
-#table tr:hover td{
+#table tr:hover td, .itemTable tr:hover td{
   background-color: #c2c2d6;
   border-color: #c2c2d6;
+}
+
+#failedAuth{
+  text-color: red;
 }
