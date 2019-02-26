@@ -3,6 +3,14 @@ var express = require('express');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var session = require('express-session');
+var mysql = require('mysql');
+var pool = mysql.createPool({
+    connectionLimit: 10,
+    host: 'localhost',
+    user: 'root',
+    password: 'mSeiais92bses',
+    database: 'antique_shop'
+});
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
 app.set('port', 7823);
@@ -102,9 +110,18 @@ let items = [
 app.get('/',function(req,res){
 
   let context = globalContext(req);
-  context.item = items;
-
-  res.render('home', context);
+  pool.query('SELECT items.id, items.name, items.description, space_items.unit_price AS cost FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name',
+  function(error, results, fields) {
+      if(error){
+          res.render('500', context);
+          return;
+      }
+      context.item = [];
+      for(let i = 0; i < results.length; i++){
+          context.item.push(results[i]);
+      }
+      res.render('home', context);
+  });
 });
 
 app.get('/logIn',function(req, res){
@@ -114,7 +131,7 @@ app.get('/logIn',function(req, res){
   if (req.query.logIn) {
     req.session.logIn = req.query.logIn || 0;
     req.session.name = req.query.Fname || null;
-    
+
     if (req.query.accType == "employee") {
       req.session.vendor = 1;
     }
@@ -181,17 +198,35 @@ app.get('/register', function(req, res){
 app.get('/meetCustomers', function(req, res){
 
   let context = globalContext(req);
-  context.customers = people;
-
-  res.render('meetCustomers', context);
+  pool.query('SELECT first_name, last_name, rewards_points FROM customers',
+  function(error, results, fields){
+      if(error){
+          res.render('500', context);
+          return;
+      }
+      context.customers = [];
+      for(let i = 0; i < results.length; i++){
+          context.customers.push({name: results[i].first_name + " " + results[i].last_name, rewardsPoints: results[i].rewards_points});
+      }
+      res.render('meetCustomers', context);
+  });
 });
 
 app.get('/meetVendors', function(req, res){
 
-  let context = globalContext(req);
-  context.vendors = people;
-
-  res.render('meetVendors', context);
+    let context = globalContext(req);
+    pool.query('SELECT first_name, last_name, employed FROM vendors',
+    function(error, results, fields){
+        if(error){
+            res.render('500', context);
+            return;
+        }
+        context.vendors = [];
+        for(let i = 0; i < results.length; i++){
+            context.vendors.push({name: results[i].first_name + " " + results[i].last_name, description: results[i].employed ? "An employee" : "An unemployed vendor"});
+        }
+        res.render('meetVendors', context);
+    });
 });
 
 app.get('/sales', function(req, res){
