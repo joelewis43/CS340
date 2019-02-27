@@ -3,11 +3,29 @@ var express = require('express');
 var app = express();
 var handlebars = require('express-handlebars').create({defaultLayout:'main'});
 var session = require('express-session');
+var bodyParser = require('body-parser');
+var mysql = require('mysql');
+var pool = mysql.createPool({
+    connectionLimit: 10,
+    /*host: 'localhost',
+    user: 'root',
+    password: 'mSeiais92bses',
+    database: 'antique_shop'*/
+    host: 'classmysql.engr.oregonstate.edu',
+    user: 'cs340_guyera',
+    password: '0615',
+    database: 'cs340_guyera'
+});
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
-app.set('port', 7823);
+//app.set('port', 7823);
+app.set('port', 7824);
 app.use(express.static(__dirname + '/public'));
 app.use(session({secret: 'SuperSecretPassword'}));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+app.use(bodyParser.json());
 
 /******************SETUP******************/
 
@@ -102,9 +120,38 @@ let items = [
 app.get('/',function(req,res){
 
   let context = globalContext(req);
-  context.item = items;
+  
+  let sql = req.query.search != undefined ? mysql.format('SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
 
-  res.render('home', context);
+  pool.query(sql,
+  function(error, results, fields) {
+      if(error){
+          res.render('500', context);
+          return;
+      }
+      context.spaceItem = [];
+      for(let i = 0; i < results.length; i++){
+          context.spaceItem.push({name: results[i].name, description: results[i].description, cost:results[i].cost.toString(), spaceID:results[i].space_id.toString()});
+      }
+      if(req.session.vendor == 1){
+        let sql = req.query.search != undefined ? mysql.format('SELECT name, description, id FROM items WHERE items.name LIKE ? OR items.description LIKE ? ORDER BY name', ['%' + req.query.search + '%', '%' + req.query.search + '%']) : 'SELECT name, description, id FROM items';
+
+	pool.query(sql,
+	function(error, results, fields){
+	  if(error){
+	    res.render('500', context);
+	    return;
+	  }
+	  context.item = [];
+	  for(let i = 0; i < results.length; i++){
+	    context.item.push(results[i]);
+	  }
+	  res.render('home', context);
+	});
+      }else{
+        res.render('home', context);
+      }
+  });
 });
 
 app.get('/logIn',function(req, res){
@@ -112,20 +159,56 @@ app.get('/logIn',function(req, res){
   //upon successful log in, set session flag
   //and redirect user to home page
   if (req.query.logIn) {
-    req.session.logIn = req.query.logIn || 0;
-    req.session.name = req.query.Fname || null;
-    
-    if (req.query.accType == "employee") {
-      req.session.vendor = 1;
+    if(req.query.accType == "employee"){
+      let sql = mysql.format('SELECT (COUNT(*) > 0) AS auth FROM vendors WHERE id=? AND first_name=?', [parseInt(req.query.ID), req.query.Fname]);
+      pool.query(sql,
+      function(error, results, fields){
+        if(error){
+          let context = globalContext(req);
+	  res.render('500', context);
+	  console.log(error);
+	  return;
+	}
+	if(results[0].auth){
+	  req.session.logIn = req.query.logIn || 0;
+          req.session.name = req.query.Fname || null;
+          req.session.vendor = 1;
+          res.writeHead(302, {
+            'Location': '/'
+          });
+          res.end();
+	}else{
+          let context = globalContext(req);
+	  context.failedAuth = 1;
+	  res.render('logIn', context);
+	}
+      });
     }
-    else {
-      req.session.customer = 1;
+    else{
+      let sql = mysql.format('SELECT (COUNT(*) > 0) AS auth FROM customers WHERE id=? AND first_name=?', [parseInt(req.query.ID), req.query.Fname]);
+      pool.query(sql,
+      function(error, results, fields){
+        if(error){
+          let context = globalContext(req);
+	  res.render('500', context);
+	  console.log(error);
+	  return;
+	}
+	if(results[0].auth){
+	  req.session.logIn = req.query.logIn || 0;
+          req.session.name = req.query.Fname || null;
+          req.session.customer = 1;
+          res.writeHead(302, {
+            'Location': '/'
+          });
+          res.end();
+	}else{
+          let context = globalContext(req);
+	  context.failedAuth = 1;
+	  res.render('logIn', context);
+	}
+      });
     }
-
-    res.writeHead(302, {
-      'Location': '/'
-    });
-    res.end();
     return;
   }
 
@@ -181,17 +264,35 @@ app.get('/register', function(req, res){
 app.get('/meetCustomers', function(req, res){
 
   let context = globalContext(req);
-  context.customers = people;
-
-  res.render('meetCustomers', context);
+  pool.query('SELECT id, first_name, last_name, rewards_points FROM customers',
+  function(error, results, fields){
+      if(error){
+          res.render('500', context);
+          return;
+      }
+      context.customers = [];
+      for(let i = 0; i < results.length; i++){
+          context.customers.push({id: results[i].id, name: results[i].first_name + " " + results[i].last_name, rewardsPoints: results[i].rewards_points});
+      }
+      res.render('meetCustomers', context);
+  });
 });
 
 app.get('/meetVendors', function(req, res){
 
-  let context = globalContext(req);
-  context.vendors = people;
-
-  res.render('meetVendors', context);
+    let context = globalContext(req);
+    pool.query('SELECT id, first_name, last_name, employed FROM vendors',
+    function(error, results, fields){
+        if(error){
+            res.render('500', context);
+            return;
+        }
+        context.vendors = [];
+        for(let i = 0; i < results.length; i++){
+            context.vendors.push({id: results[i].id, name: results[i].first_name + " " + results[i].last_name, description: results[i].employed ? "An employee" : "An unemployed vendor"});
+        }
+        res.render('meetVendors', context);
+    });
 });
 
 app.get('/sales', function(req, res){
@@ -238,6 +339,40 @@ app.get('/addTransaction', function(req, res){
   let context = globalContext(req)
 
   res.render('addTransaction', context);
+});
+
+app.post('/createItem', function(req, res){
+  let context = globalContext(req);
+  var sql = mysql.format('INSERT INTO items(name, description) VALUE(?, ?)', [req.body.name, req.body.description]);
+  pool.query(sql,
+  function(error, results, fields){
+    if(error){
+      console.log(error);
+      res.render('500', context);
+      return;
+    }
+    res.writeHead('302', {
+      Location: '/'
+    });
+    res.end();
+  });
+});
+
+app.post('/createSpaceItem', function(req, res){
+  let context = globalContext(req);
+  var sql = mysql.format('INSERT INTO space_items(space_id, item_id, unit_price) VALUE(?, ?, ?)', [req.body.space_id, req.body.item_id, req.body.cost]);
+  pool.query(sql,
+  function(error, results, fields){
+    if(error){
+      console.log(error);
+      res.render('500', context);
+      return;
+    }
+    res.writeHead('302', {
+      Location: '/'
+    });
+    res.end();
+  });
 });
 /**************ROUTE HANDLERS*************/
 

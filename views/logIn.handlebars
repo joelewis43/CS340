@@ -1,6 +1,9 @@
 <div>
+    {{#if failedAuth}}
+      <h4 id='failedAuth'>Invalid login credentials provided. See /meetVendors and /meetCustomers for valid credentials.</h4>
+    {{/if}}
     <h3>Please provide your login credentials.</h3>
-    <p>Selecting Employee or Customer is all you need to sign in right now.</p>
+    <p>Selecting Vendor or Customer is all you need to sign in right now.</p>
 </div>
 
 <div class="ui segment">
@@ -18,7 +21,7 @@
         <div>
             <label>Are you a(n)</label><br>
             <input type="radio" name="accType" value="employee" required>
-            <label>Employee</label>
+            <label>Vendor</label>
             <input type="radio" name="accType" value="customer" required>
             <label>Customer</label>
         </div>

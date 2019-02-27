@@ -3,12 +3,32 @@
 </div>
 
 <div class="ui segment">
-    <form class="ui form" action="">
+    <form class="ui form" action="/register" method="post">
         <div>
             <label>First Name</label>
-            <input type="text" name="Fname" placeholder="First Name">
+            <input type="text" name="Fname" placeholder="First Name"/>
+            <label>Last Name</label>
+            <input type="text" name="Lname" placeholder="Last Name"/>
+        </div>
+        
+	<div>
+            <label>Are you a(n)</label><br>
+            <input type="radio" name="accType" value="customer" checked onclick="toggleAccType()" required/>
+            <label>Customer</label>
+            <input type="radio" name="accType" value="vendor" onclick="toggleAccType()" required/>
+            <label>Vendor</label>
         </div>
 
-        <div class="ui submit button">Submit</div>
+	<div id="customerRegContainer">
+	    <label>Phone number</label>
+	    <input type="text" name="Pnumber" placeholder="(555) 555-5555"/>
+	</div>
+	
+	<div id="vendorRegContainer">
+	    <input type="checkbox" name="employed" id="employed"/>
+	    <label for="employed">Employed</label>
+	</div>
+
+        <input class="ui submit button" type="submit"/>
     </form>
 </div>

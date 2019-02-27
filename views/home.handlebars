@@ -13,38 +13,94 @@
         </form>
     </div>
 
-    <h2>Our Current Stock</h2>
-    <div class="ui segment">
-        <table id="table">
-            <tr>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Cost</th>
-            </tr>
+    {{#if vendor}}
+    	<div class="ui segment">
+            <h2>Add an item</h2>
+    	    <form class="ui form" action="/createItem" method="post">
+                <div>
+                    <input type="text" name="name" placeholder="Name"/>
+                    <input type="text" name="description" placeholder="Description"/>
+                </div>
 
-            {{#if vendor}}
-                {{#each item}}
+                <input class="ui submit button" type="submit"/>
+            </form>
+	
+	    <h2>Add an item to an existing space</h3>
+            <form class="ui form" action="/createSpaceItem" method="POST">
+                <div>
+                    <input type="text" name="item_id" placeholder="Item ID"/>
+                    <input type="text" name="space_id" placeholder="Space ID"/>
+                    <input type="text" name="cost" placeholder="Cost"/>
+                </div>
+
+                <input class="ui submit button" type="submit"/>
+            </form> 
+	</div>
+    {{/if}}
+
+    <div class="ui segment">
+        {{#if vendor}}
+	    <h2>All Items</h2>
+	    <table class="itemTable">
+	        <tr>
+		    <th>Name</th>
+		    <th>Description</th>
+		    <th>ID</th>
+		</tr>
+		
+		{{#each item}}
+		    <tr>
+		        <td>{{this.name}}</td>
+		        <td>{{this.description}}</td>
+		        <td>{{this.id}}</td>
+		    </tr>
+		{{/each}}
+	    </table>
+            
+	    <h2>Items for Sale</h2>
+	    <table class="itemTable" id="table">
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Cost</th>
+		    <th>Space ID</th>
+                </tr>
+
+                {{#each spaceItem}}
                     <tr>
                         <form class="ui form">
-                            <td><input type="text" name="name" value="{{this.name}}"></input></td>
-                            <td><input type="text" name="description" value="{{this.description}}"></input></td>
+                            <td>{{this.name}}</td>
+                            <td>{{this.description}}</td>
                             <td><input type="text" name="cost" value="${{this.cost}}"></input></td>
-                            <td><div class="ui submit button">Update</td>
+                            <td>{{this.spaceID}}</td>
+			    <td><div class="ui submit button">Update</td>
                             <td><div class="ui submit button">Delete</td>
                         </form>
                     </tr>
                 {{/each}}
-            {{else}}
-                {{#each item}}
+
+            </table>
+	{{else}}
+	    <h2>Items for Sale</h2>
+	    <table id="table">
+                <tr>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Cost</th>
+		    <th>Space ID</th>
+                </tr>
+
+                {{#each spaceItem}}
                     <tr>
                         <td>{{this.name}}</td>
                         <td>{{this.description}}</td>
                         <td>${{this.cost}}</td>
+                        <td>{{this.spaceID}}</td>
                     </tr>
                 {{/each}}
-            {{/if}}
 
-        </table>
+            </table>
+	{{/if}}
     </div>
 
 </div>
