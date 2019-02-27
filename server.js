@@ -7,14 +7,14 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 10,
-    /*host: 'localhost',
+    host: 'localhost',
     user: 'root',
     password: 'mSeiais92bses',
-    database: 'antique_shop'*/
-    host: 'classmysql.engr.oregonstate.edu',
-    user: 'cs340_guyera',
-    password: '0615',
-    database: 'cs340_guyera'
+    database: 'antique_shop'
+    // host: 'classmysql.engr.oregonstate.edu',
+    // user: 'cs340_guyera',
+    // password: '0615',
+    // database: 'cs340_guyera'
 });
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
@@ -120,7 +120,7 @@ let items = [
 app.get('/',function(req,res){
 
   let context = globalContext(req);
-  
+
   let sql = req.query.search != undefined ? mysql.format('SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
 
   pool.query(sql,
@@ -165,23 +165,23 @@ app.get('/logIn',function(req, res){
       function(error, results, fields){
         if(error){
           let context = globalContext(req);
-	  res.render('500', context);
-	  console.log(error);
-	  return;
-	}
-	if(results[0].auth){
-	  req.session.logIn = req.query.logIn || 0;
+    	  res.render('500', context);
+    	  console.log(error);
+    	  return;
+    	}
+    	if(results[0].auth){
+    	  req.session.logIn = req.query.logIn || 0;
           req.session.name = req.query.Fname || null;
           req.session.vendor = 1;
           res.writeHead(302, {
             'Location': '/'
           });
           res.end();
-	}else{
+    	}else{
           let context = globalContext(req);
-	  context.failedAuth = 1;
-	  res.render('logIn', context);
-	}
+    	  context.failedAuth = 1;
+    	  res.render('logIn', context);
+    	}
       });
     }
     else{
@@ -190,23 +190,23 @@ app.get('/logIn',function(req, res){
       function(error, results, fields){
         if(error){
           let context = globalContext(req);
-	  res.render('500', context);
-	  console.log(error);
-	  return;
-	}
-	if(results[0].auth){
-	  req.session.logIn = req.query.logIn || 0;
+    	  res.render('500', context);
+    	  console.log(error);
+    	  return;
+    	}
+    	if(results[0].auth){
+    	  req.session.logIn = req.query.logIn || 0;
           req.session.name = req.query.Fname || null;
           req.session.customer = 1;
           res.writeHead(302, {
             'Location': '/'
           });
           res.end();
-	}else{
+    	}else{
           let context = globalContext(req);
-	  context.failedAuth = 1;
-	  res.render('logIn', context);
-	}
+    	  context.failedAuth = 1;
+    	  res.render('logIn', context);
+    	}
       });
     }
     return;
@@ -373,6 +373,45 @@ app.post('/createSpaceItem', function(req, res){
     });
     res.end();
   });
+});
+
+app.post('/register', function(req, res){
+  let context = globalContext(req);
+  if(req.body.accType == "vendor"){
+    var sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
+    pool.query(sql,
+    function(error, results, fields){
+      if(error){
+          console.log(error);
+          res.render('500', context);
+          return;
+      }
+      req.session.logIn = 1;
+      req.session.name = req.body.Fname || null;
+      req.session.vendor = 1;
+      res.writeHead('302', {
+          Location: "/"
+      });
+      res.end();
+    });
+  }else{
+    var sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
+    pool.query(sql,
+    function(error, results, fields){
+      if(error){
+          console.log(error);
+          res.render('500', context);
+          return;
+      }
+      req.session.logIn = 1;
+      req.session.name = req.body.Fname || null;
+      req.session.customer = 1;
+      res.writeHead('302', {
+          Location: "/"
+      });
+      res.end();
+    });
+  }
 });
 /**************ROUTE HANDLERS*************/
 
