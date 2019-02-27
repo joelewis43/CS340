@@ -13,10 +13,10 @@
         
 	<div>
             <label>Are you a(n)</label><br>
-            <input type="radio" name="accType" value="employee" required/>
-            <label>Vendor</label>
-            <input type="radio" name="accType" value="customer" required/>
+            <input type="radio" name="accType" value="customer" checked onclick="toggleAccType()" required/>
             <label>Customer</label>
+            <input type="radio" name="accType" value="vendor" onclick="toggleAccType()" required/>
+            <label>Vendor</label>
         </div>
 
 	<div id="customerRegContainer">
