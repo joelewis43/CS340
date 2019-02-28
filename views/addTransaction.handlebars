@@ -1,19 +1,46 @@
 <div>
+  <h1 style="padding-bottom: 25px">Add a Transaction</h1>
 
-    <h1 style="padding-bottom: 25px">Add a Transaction</h1>
+  {{#if success}}
+  <h3>{{success}}</h3>
+  {{/if}}
 
+  {{#unless numItems}}
+  <div class="ui segment">
+    <form class="ui form" action="/addTransaction" method="GET">
+      <div>
+        <label>Customer Number</label>
+        <input type="number" name="CID" required />
+      </div>
+      <div>
+        <label>How many items are in the sale?</label>
+        <input type="number" name="numItems" required />
+      </div>
+      <input type="submit" class="ui submit button" />
+    </form>
+  </div>
+  {{/unless}}
+
+  {{#if numItems}}
+  <form class="ui form" action="/addTransaction" method="POST">
+    {{#each numItems}}
     <div class="ui segment">
-      <form class="ui form" action="/addTransaction" method="POST">
-        <label>Item Name</labeL>
-        <input name="name" type="text"/>
-
-        <label>Space</labeL>
-        <input name="space" type="number"/>
-
-        <label>Asking Price</labeL>
-        <input name="price" type="number"/>
-
-        <input style="margin-top: 10px" class="ui submit button" type="submit"/>
-      </form>
+      <label>Item ID</label>
+      <input type="number" name="itemID" required />
+  
+      <label>Vendor ID</label>
+      <input type="number" name="VID" required />
+  
+      <label>Quantity</label>
+      <input type="number" name="quantity" required />
+  
+      <label>Total Price</label>
+      <input type="number" name="price" required /> 
     </div>
+    {{/each}}
+    <input type="hidden" name="TID" value={{newID}} />
+    <input type="submit" class="ui submit button">
+  </form>
+  {{/if}}
+
 </div>

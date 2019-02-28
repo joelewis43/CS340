@@ -74,12 +74,10 @@ let sales = [
 /*
   INSERT:
     Transactions
-    Spaces
     Line Items
     Time Logs
   SELECT:
     Transactions
-    Spaces
     Line Items
     Time Logs
 */
@@ -315,6 +313,7 @@ app.post('/newSpace', function(req, res){
   let context = globalContext(req);
 
   let getID = mysql.format('SELECT id FROM vendors WHERE first_name=? AND last_name=?', [req.body.Fname, req.body.Lname]);
+  console.log(getID);
 
   pool.query(getID, function(error, results, fields){
     if(error){
@@ -370,16 +369,50 @@ app.get('/addItem', function(req, res){
 
 app.get('/addTransaction', function(req, res){
 
-  let context = globalContext(req)
+  let context = globalContext(req);
+  
+  if (isEmpty(req.query)) {
+    //request the user to specify how many items are in the transaction
+    context.numItems = null;
+    res.render('addTransaction', context);  
+  }
+  else {
 
-  res.render('addTransaction', context);
+    //insert transaction
+    let sql = mysql.format("INSERT INTO transactions (customer_id) VALUES (?)", [parseInt(req.query.CID)]);
+    pool.query(sql, function(error, results, fields){
+      //display the appropriate number of rows (one per line item)
+      context.numItems = [];
+      context.newID = results.insertId;
+      for(var i=0; i<req.query.numItems; i++)
+        context.numItems.push(0);
+      res.render('addTransaction', context); 
+    });
+  }  
 });
 
 app.post('/addTransaction', function(req, res){
   let context = globalContext(req);
-  let sql = mysql.format('INSERT INTO transactions  ')
-  
-  res.redirect('/addTransaction');
+
+  let temp = [];
+  let values = [];
+  for(var i=0; i<req.body.itemID.length; i++) {
+    temp.push("(?)");
+
+    values.push([parseInt(req.body.itemID[i]), parseInt(req.body.TID), parseInt(req.body.VID[i]), parseInt(req.body.quantity[i]), parseInt(req.body.price[i])]);
+  }
+  temp = "INSERT INTO line_items (item_id, transaction_id, vendor_id, quantity, unit_price) VALUES " + temp.join();
+
+  let sql = mysql.format(temp, values);
+  pool.query(sql, function(error, results, fields){
+    if(error){
+      console.log(error);
+      res.render('500', context);
+      return;
+    }
+    context.success = "Transaction successfully added! Invoice No. " + req.body.TID;
+    res.render('addTransaction', context);
+  });
 });
 
 app.post('/createItem', function(req, res){
@@ -455,6 +488,14 @@ app.post('/register', function(req, res){
   }
 });
 /**************ROUTE HANDLERS*************/
+
+function isEmpty(obj) {
+  for (var prop in obj) {
+    if (obj.hasOwnProperty(prop))
+      return false;
+  }
+  return true;
+}
 
 
 /*************ERROR HANDLING**************/
