@@ -1,22 +1,27 @@
 <div>
     <h3>Add a Space!</h3>
+    <h5>Providing a vendors info will allocate them an additional space!</h5>
+    {{#if newID}}
+        <h5>{{fname}} was allocated space {{newID}}</h5>
+    {{/if}}
+
+    {{#if error}}
+        <h5>There was an error in your input.</h5>
+    {{/if}}
 </div>
 
 <div class="ui segment">
-    <form class="ui form" action="">
+
+    <form class="ui form" action="/newSpace" method="POST">
         <h5>Vendor Details</h5>
 
         <label>First name</label>
-        <input name="Fname" type="text">
+        <input name="Fname" type="text" required>
 
         <label>Last name</label>
-        <input name="Lname" type="text">
-        
-        <h5>Space Details</h5>
-        
-        <label>Space Number</label>
-        <input type="number" name="vendor" min="1" max="12">
+        <input name="Lname" type="text" required>
 
         <input style="margin-top: 10px" class="ui submit button" type="submit"/>
     </form>
+
 </div>

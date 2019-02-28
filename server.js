@@ -7,14 +7,14 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var pool = mysql.createPool({
     connectionLimit: 10,
-    host: 'localhost',
-    user: 'root',
-    password: 'mSeiais92bses',
-    database: 'antique_shop'
-    // host: 'classmysql.engr.oregonstate.edu',
-    // user: 'cs340_guyera',
-    // password: '0615',
-    // database: 'cs340_guyera'
+    // host: 'localhost',
+    // user: 'root',
+    // password: 'mSeiais92bses',
+    // database: 'antique_shop'
+    host: 'classmysql.engr.oregonstate.edu',
+    user: 'cs340_lewisjos',
+    password: '2226',
+    database: 'cs340_lewisjos'
 });
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
@@ -34,23 +34,12 @@ function globalContext(req) {
     logIn: req.session.logIn,
     vendor: req.session.vendor,
     customer: req.session.customer,
-    name: req.session.name
+    name: req.session.name,
+    id: req.session.id
   }
 }
 
 /**************TEST VARIABLES*************/
-//For Meet vendors and customers
-let people = [
-  {
-    name: 'Joe Lewis',
-    description: 'A developer'
-  },
-  {
-    name: 'Alex Guyer',
-    description: 'Another developer'
-  }
-];
-
 //For customer purchases page
 let purchases = [
   {
@@ -80,41 +69,20 @@ let sales = [
     cost: 85
   }
 ];
-
-//For home page stock
-let items = [
-  {
-    id: 50,
-    name: 'Lamp',
-    description: "Moths love this.",
-    cost: 20
-  },
-  {
-    id: 3,
-    name: 'Vinyl',
-    description: "Probably makes noise.",
-    cost: 8
-  },
-  {
-    id: 6,
-    description: "Beep boop",
-    name: 'Robot Toy',
-    cost: 85
-  },
-  {
-    id: 14,
-    description: "Moths also love this.",
-    name: 'Wool Sweater',
-    cost: 150
-  },
-  {
-    id: 57,
-    description: "Take it or leave it",
-    name: 'Original Picasso',
-    cost: 20
-  }
-];
 /**************TEST VARIABLES*************/
+
+/*
+  INSERT:
+    Transactions
+    Spaces
+    Line Items
+    Time Logs
+  SELECT:
+    Transactions
+    Spaces
+    Line Items
+    Time Logs
+*/
 
 /**************ROUTE HANDLERS*************/
 app.get('/',function(req,res){
@@ -165,19 +133,21 @@ app.get('/logIn',function(req, res){
       function(error, results, fields){
         if(error){
           let context = globalContext(req);
-    	  res.render('500', context);
-    	  console.log(error);
-    	  return;
-    	}
+    	    res.render('500', context);
+    	    console.log(error);
+    	    return;
+    	  }
     	if(results[0].auth){
     	  req.session.logIn = req.query.logIn || 0;
-          req.session.name = req.query.Fname || null;
-          req.session.vendor = 1;
-          res.writeHead(302, {
-            'Location': '/'
-          });
-          res.end();
-    	}else{
+        req.session.name = req.query.Fname || null;
+        req.session.vendor = 1;
+        res.writeHead(302, {
+          'Location': '/'
+        });
+        console.log(req.session);
+        res.end();
+      }
+      else{
           let context = globalContext(req);
     	  context.failedAuth = 1;
     	  res.render('logIn', context);
@@ -197,6 +167,7 @@ app.get('/logIn',function(req, res){
     	if(results[0].auth){
     	  req.session.logIn = req.query.logIn || 0;
           req.session.name = req.query.Fname || null;
+          req.session.id = parseInt(req.query.ID);
           req.session.customer = 1;
           res.writeHead(302, {
             'Location': '/'
@@ -247,6 +218,28 @@ app.get('/clockIO', function(req, res){
   res.render('clockIO', context);
 });
 
+app.post('/clockIO', function(req, res){
+
+  let context = globalContext(req);
+  let sql = mysql.format('INSERT INTO time_logs (vendor_id, time_in, time_out) VALUES (?, ?, ?)',
+  [req.session.id, req.body.timeIn, req.body.timeOut || null]);
+
+  console.log(sql);
+
+  /*pool.query(sql, function(error, results, fields){
+    if(error){
+      console.log(error);
+      res.render('500', context);
+      return;
+    }
+    res.writeHead('302', {
+      Location: '/'
+    });
+    res.redirect('/clockIO');
+  });*/
+  res.redirect('/clockIO');
+});
+
 app.get('/timesheet', function(req, res){
 
   let context = globalContext(req);
@@ -281,7 +274,7 @@ app.get('/meetCustomers', function(req, res){
 app.get('/meetVendors', function(req, res){
 
     let context = globalContext(req);
-    pool.query('SELECT id, first_name, last_name, employed FROM vendors',
+    pool.query('SELECT first_name, last_name, employed, id FROM vendors ORDER BY last_name',
     function(error, results, fields){
         if(error){
             res.render('500', context);
@@ -289,7 +282,15 @@ app.get('/meetVendors', function(req, res){
         }
         context.vendors = [];
         for(let i = 0; i < results.length; i++){
-            context.vendors.push({id: results[i].id, name: results[i].first_name + " " + results[i].last_name, description: results[i].employed ? "An employee" : "An unemployed vendor"});
+
+          let test = mysql.format('SELECT id FROM spaces WHERE vendor_id=?', [results[i].id]);
+          let spaces = [];
+          pool.query(test, function(error, r, fields){
+            for (let x=0; x<r.length; x++){
+              spaces.push(r[x].id);
+            }
+            context.vendors.push({spaces: spaces, id: results[i].id, name: results[i].first_name + " " + results[i].last_name, description: results[i].employed ? "An employee" : "An unemployed vendor"});
+          });
         }
         res.render('meetVendors', context);
     });
@@ -308,6 +309,39 @@ app.get('/newSpace', function(req, res){
   let context = globalContext(req);
 
   res.render('newSpace', context);
+});
+
+app.post('/newSpace', function(req, res){
+  let context = globalContext(req);
+
+  let getID = mysql.format('SELECT id FROM vendors WHERE first_name=? AND last_name=?', [req.body.Fname, req.body.Lname]);
+
+  pool.query(getID, function(error, results, fields){
+    if(error){
+      console.log(error);
+      res.render('500', context);
+      return;
+    }
+    context.fname = req.body.Fname;
+    if (results[0]){    
+      let sql = mysql.format('INSERT INTO spaces (vendor_id) VALUES (?)', [results[0].id]);
+      pool.query(sql, function(error, results, fields){
+        if(error){
+          console.log(error);
+          res.render('500', context);
+          return;
+        }
+        context.newID = results.insertId;
+        res.render('newSpace', context);
+        return;
+      });
+    }
+    else{
+      context.error = 1;
+      res.render('newSpace', context);
+    }
+    
+  });
 });
 
 app.get('/Purchases', function(req, res){
@@ -339,6 +373,13 @@ app.get('/addTransaction', function(req, res){
   let context = globalContext(req)
 
   res.render('addTransaction', context);
+});
+
+app.post('/addTransaction', function(req, res){
+  let context = globalContext(req);
+  let sql = mysql.format('INSERT INTO transactions  ')
+  
+  res.redirect('/addTransaction');
 });
 
 app.post('/createItem', function(req, res){

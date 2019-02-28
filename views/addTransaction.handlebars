@@ -3,15 +3,15 @@
     <h1 style="padding-bottom: 25px">Add a Transaction</h1>
 
     <div class="ui segment">
-      <form class="ui form">
+      <form class="ui form" action="/addTransaction" method="POST">
         <label>Item Name</labeL>
-        <input type="text"/>
+        <input name="name" type="text"/>
 
         <label>Space</labeL>
-        <input type="number"/>
+        <input name="space" type="number"/>
 
         <label>Asking Price</labeL>
-        <input type="number"/>
+        <input name="price" type="number"/>
 
         <input style="margin-top: 10px" class="ui submit button" type="submit"/>
       </form>

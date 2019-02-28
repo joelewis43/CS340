@@ -2,11 +2,11 @@
     <h3>Meet our Vendors!</h3>
 </div>
 
-<div class="ui segment">
-    {{#each vendors}}
+{{#each vendors}}
+    <div class="ui segment">
         <h5>{{this.name}}</h5>
-	<p>ID: {{this.id}}</p>
+	    <p>ID: {{this.id}}</p>
         <p>{{this.description}}</p>
-        <div class="ui divider"></div>
-    {{/each}}
-</div>
+        <p>Owns the following spaces: {{this.spaces}}</p>
+    </div>
+{{/each}}
