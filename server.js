@@ -55,20 +55,6 @@ let purchases = [
     cost: 8
   }
 ];
-
-//For vendor sales page
-let sales = [
-  {
-    id: 50,
-    name: 'Lamp',
-    cost: 20
-  },
-  {
-    id: 6,
-    name: 'Robot Toy',
-    cost: 85
-  }
-];
 /**************TEST VARIABLES*************/
 
 /*
@@ -138,11 +124,11 @@ app.get('/logIn',function(req, res){
     	if(results[0].auth){
     	  req.session.logIn = req.query.logIn || 0;
         req.session.name = req.query.Fname || null;
+        req.session.id = parseInt(req.query.ID);
         req.session.vendor = 1;
         res.writeHead(302, {
           'Location': '/'
         });
-        console.log(req.session);
         res.end();
       }
       else{
@@ -155,28 +141,28 @@ app.get('/logIn',function(req, res){
     else{
       let sql = mysql.format('SELECT (COUNT(*) > 0) AS auth FROM customers WHERE id=? AND first_name=?', [parseInt(req.query.ID), req.query.Fname]);
       pool.query(sql,
-      function(error, results, fields){
-        if(error){
-          let context = globalContext(req);
-    	  res.render('500', context);
-    	  console.log(error);
-    	  return;
-    	}
-    	if(results[0].auth){
-    	  req.session.logIn = req.query.logIn || 0;
-          req.session.name = req.query.Fname || null;
-          req.session.id = parseInt(req.query.ID);
-          req.session.customer = 1;
-          res.writeHead(302, {
-            'Location': '/'
-          });
-          res.end();
-    	}else{
-          let context = globalContext(req);
-    	  context.failedAuth = 1;
-    	  res.render('logIn', context);
-    	}
-      });
+        function (error, results, fields) {
+          if (error) {
+            let context = globalContext(req);
+            res.render('500', context);
+            console.log(error);
+            return;
+          }
+          if (results[0].auth) {
+            console.log()
+            req.session.logIn = req.query.logIn || 0;
+            req.session.name = req.query.Fname || null;
+            req.session.customer = 1;
+            res.writeHead(302, {
+              'Location': '/'
+            });
+            res.end();
+          } else {
+            let context = globalContext(req);
+            context.failedAuth = 1;
+            res.render('logIn', context);
+          }
+        });
     }
     return;
   }
@@ -297,9 +283,27 @@ app.get('/meetVendors', function(req, res){
 app.get('/sales', function(req, res){
 
   let context = globalContext(req);
-  context.sale = sales;
 
   res.render('sales', context);
+});
+
+app.post('/sales', function(req, res){
+  let context = globalContext(req);
+
+  let sql = mysql.format(
+    "SELECT i.name, li.transaction_id, li.quantity, li.unit_price "+
+    "FROM line_items AS li "+
+    "INNER JOIN items AS i ON li.item_id=i.id "+
+    "WHERE vendor_id=?;", parseInt([req.body.VID]));
+  pool.query(sql, function(error, results, fields){
+
+    context.sales = [];
+    for(let i=0; i<results.length; i++) {
+      context.sales.push({name: results[i].name, tid: results[i].transaction_id, quantity: results[i].quantity, cost: results[i].unit_price});
+    }
+
+    res.render('sales', context);
+  });
 });
 
 app.get('/newSpace', function(req, res){
