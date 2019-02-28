@@ -7,14 +7,14 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var pool = mysql.createPool({
   connectionLimit: 10,
-  // host: 'localhost',
-  // user: 'root',
-  // password: 'mSeiais92bses',
-  // database: 'antique_shop'
+  //host: 'classmysql.engr.oregonstate.edu',
+  //user: 'cs340_lewisjos',
+  //password: '2226',
+  //database: 'cs340_lewisjos'
   host: 'classmysql.engr.oregonstate.edu',
-  user: 'cs340_lewisjos',
-  password: '2226',
-  database: 'cs340_lewisjos'
+  user: 'cs340_guyera',
+  password: '0615',
+  database: 'cs340_guyera'
 });
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
@@ -46,7 +46,8 @@ function globalContext(req) {
     vendor: req.session.vendor,
     customer: req.session.customer,
     name: req.session.name,
-    id: req.session.id
+    vendorID: req.session.vendorID,
+    customerID: req.session.customerID
   }
 }
 
@@ -76,7 +77,6 @@ function isEmpty(obj) {
   Description:
 ***********************************************************************/
 app.get('/', function (req, res) {
-
   let context = globalContext(req);
 
   let sql = req.query.search != undefined ? mysql.format('SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
@@ -133,7 +133,7 @@ app.get('/logIn', function (req, res) {
         if (results[0].auth) {
           req.session.logIn = req.query.logIn || 0;
           req.session.name = req.query.Fname || null;
-          req.session.id = parseInt(req.query.ID);
+          req.session.vendorID = parseInt(req.query.ID);
           req.session.vendor = 1;
           res.writeHead(302, {
             'Location': '/'
@@ -161,7 +161,7 @@ app.get('/logIn', function (req, res) {
           req.session.logIn = req.query.logIn || 0;
           req.session.name = req.query.Fname || null;
           req.session.customer = 1;
-          req.session.id = parseInt(req.query.ID);
+          req.session.customerID = parseInt(req.query.ID);
           res.writeHead(302, {
             'Location': '/'
           });
@@ -196,6 +196,8 @@ app.get('/logOut', function (req, res) {
   req.session.customer = 0;
   req.session.vendor = 0;
   req.session.name = 0;
+  req.session.vendorID = -1;
+  req.session.customerID = -1;
 
   res.writeHead(302, {
     'Location': '/'
@@ -240,7 +242,7 @@ app.post('/clockIO', function (req, res) {
 
   let context = globalContext(req);
   let sql = mysql.format('INSERT INTO time_logs (vendor_id, time_in, time_out) VALUES (?, ?, ?)',
-    [req.session.id, req.body.timeIn, req.body.timeOut || null]);
+    [req.session.vendorID, req.body.timeIn, req.body.timeOut || null]);
 
   console.log(sql);
 
@@ -654,7 +656,7 @@ app.post('/createSpaceItem', function (req, res) {
 app.post('/register', function (req, res) {
   let context = globalContext(req);
   if (req.body.accType == "vendor") {
-    var sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
+    let sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
@@ -664,13 +666,25 @@ app.post('/register', function (req, res) {
       req.session.logIn = 1;
       req.session.name = req.body.Fname || null;
       req.session.vendor = 1;
-      res.writeHead('302', {
-        Location: "/"
+      let sql = mysql.format('SELECT id FROM vendors WHERE first_name=? AND last_name=? AND employed=? ORDER BY id DESC', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
+      pool.query(sql, function(error, results, fields){
+        if(error) {
+	  console.log(error);
+	  res.render('500', context);
+	  return;
+	} else if (results.length == 0) {
+	  res.render('500', context);
+	  return;
+	}
+	req.session.vendorID = results[0].id;
+	res.writeHead('302', {
+          Location: "/"
+        });
+        res.end();
       });
-      res.end();
     });
   } else {
-    var sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
+    let sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
@@ -680,10 +694,22 @@ app.post('/register', function (req, res) {
       req.session.logIn = 1;
       req.session.name = req.body.Fname || null;
       req.session.customer = 1;
-      res.writeHead('302', {
-        Location: "/"
+      let sql = mysql.format('SELECT id FROM customers WHERE first_name=? AND last_name=? AND phone_number=? ORDER BY id DESC', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
+      pool.query(sql, function(error, results, fields){
+        if(error) {
+	  console.log(error);
+	  res.render('500', context);
+	  return;
+	} else if (results.length == 0) {
+	  res.render('500', context);
+	  return;
+	}
+	req.session.customerID = results[0].id;
+	res.writeHead('302', {
+          Location: "/"
+        });
+        res.end();
       });
-      res.end();
     });
   }
 });
