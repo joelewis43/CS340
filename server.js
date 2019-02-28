@@ -39,35 +39,6 @@ function globalContext(req) {
   }
 }
 
-/**************TEST VARIABLES*************/
-//For customer purchases page
-let purchases = [
-  {
-    id: 50,
-    name: 'Lamp',
-    description: "Moths love this.",
-    cost: 20
-  },
-  {
-    id: 3,
-    name: 'Vinyl',
-    description: "Probably makes noise.",
-    cost: 8
-  }
-];
-/**************TEST VARIABLES*************/
-
-/*
-  INSERT:
-    Transactions
-    Line Items
-    Time Logs
-  SELECT:
-    Transactions
-    Line Items
-    Time Logs
-*/
-
 /**************ROUTE HANDLERS*************/
 app.get('/',function(req,res){
 
@@ -153,6 +124,7 @@ app.get('/logIn',function(req, res){
             req.session.logIn = req.query.logIn || 0;
             req.session.name = req.query.Fname || null;
             req.session.customer = 1;
+            req.session.id = parseInt(req.query.ID);
             res.writeHead(302, {
               'Location': '/'
             });
@@ -186,13 +158,6 @@ app.get('/logOut',function(req, res){
   });
   res.end();
   return;
-});
-
-app.get('/employee', function(req, res){
-
-  let context = globalContext(req);
-
-  res.render('employee', context);
 });
 
 app.get('/clockIO', function(req, res){
@@ -299,7 +264,8 @@ app.post('/sales', function(req, res){
 
     context.sales = [];
     for(let i=0; i<results.length; i++) {
-      context.sales.push({name: results[i].name, tid: results[i].transaction_id, quantity: results[i].quantity, cost: results[i].unit_price});
+      let x = results[i];
+      context.sales.push({name: x.name, tid: x.transaction_id, quantity: x.quantity, cost: x.unit_price});
     }
 
     res.render('sales', context);
@@ -350,9 +316,22 @@ app.post('/newSpace', function(req, res){
 app.get('/Purchases', function(req, res){
 
   let context = globalContext(req);
-  context.purchase = purchases;
 
-  res.render('purchases', context);
+  let sql = mysql.format(
+    "SELECT t.id AS INVOICE, i.name AS ITEM, li.quantity, li.vendor_id, li.unit_price "+
+    "FROM transactions AS t " +
+    "INNER JOIN line_items AS li ON li.transaction_id = t.id " + 
+    "INNER JOIN items AS i ON li.item_id=i.id " +
+    "WHERE t.customer_id=1");
+  pool.query(sql, function(error, results, fields){
+    
+    context.purchases = [];
+    for(let i=0; i<results.length; i++) {
+      let x = results[i];
+      context.purchases.push({name: x.ITEM, tid: x.INVOICE, vid: x.vendor_id, quantity: x.quantity, cost: x.unit_price});
+    }
+    res.render('purchases', context);
+  });
 });
 
 app.get('/Rewards', function(req, res){

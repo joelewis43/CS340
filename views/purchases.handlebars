@@ -5,17 +5,21 @@
 <div class="ui segment">
     <table id="table">
         <tr>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Cost</th>
+            <th>Item Name</th>
+            <th>Transaction</th>
+            <th>Vendor</th>
+            <th>Quantity</th>
+            <th>Unit Cost</th>
         </tr>
 
-        {{#each purchase}}
-            <tr>
-                <td>{{this.name}}</td>
-                <td>{{this.description}}</td>
-                <td>{{this.cost}}</td>
-            </tr>
+        {{#each purchases}}
+        <tr>
+            <td>{{this.name}}</td>
+            <td>{{this.tid}}</td>
+            <td>{{this.vid}}</td>
+            <td>{{this.quantity}}</td>
+            <td>{{this.cost}}</td>
+        </tr>
         {{/each}}
 
     </table>
