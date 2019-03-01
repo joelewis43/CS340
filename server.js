@@ -280,7 +280,10 @@ app.post('/clockIO', function (req, res) {
   Title:        View Timesheet
   Route:        /timesheet
   Written By:   Joseph Lewis
-  Description:
+  Description:  Selects all time_logs for the vendor. Displays the
+                date, time in, time out, and the shift length
+  WARNINGS:     VID is hardcoded, change once we can reference VID
+                from session
 ***********************************************************************/
 app.get('/timesheet', function (req, res) {
 
@@ -304,6 +307,8 @@ app.get('/timesheet', function (req, res) {
     let date;
     let length;
     context.times = [];
+
+    //parse time, date, and length from each row
     for (let i=0; i<results.length; i++) {
 
       //calculate length (provided in minutes between shift)
@@ -433,7 +438,8 @@ app.get('/sales', function (req, res) {
   Title:        Sales Form Results
   Route:        /sales
   Written By:   Joseph Lewis
-  Description:
+  Description:  Displays all sales for the vendor whose ID was
+                provided
 ***********************************************************************/
 app.post('/sales', function (req, res) {
 
@@ -641,7 +647,9 @@ app.get('/addTransaction', function (req, res) {
   Title:        Add Transaction Handler
   Route:        /addTransaction
   Written By:   Joseph Lewis
-  Description:  
+  Description:  runs when the line item form is submitted. INSERTS
+                line items into the table and displays a message
+                if successful.
 ***********************************************************************/
 app.post('/addTransaction', function (req, res) {
 
