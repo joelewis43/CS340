@@ -5,29 +5,21 @@
     <div class="ui segment">
       <table id="table">
         <tr>
-          <th>Date</th>
-          <th>Time in</th>
-          <th>Time out</th>
-          <th>Time worked</th>
+            <th>Date</th>
+            <th>Time In</th>
+            <th>Time Out</th>
+            <th>Length</th>
         </tr>
+
+        {{#each times}}
         <tr>
-          <td>2/7/2019</td>
-          <td>12:00 PM</td>
-          <td>1:00 PM</td>
-          <td>1 hour, 0 minutes</td>
+            <td>{{this.date}}</td>
+            <td>{{this.in}}</td>
+            <td>{{this.out}}</td>
+            <td>{{this.length}}</td>
         </tr>
-        <tr>
-          <td>2/6/2019</td>
-          <td>1:00 PM</td>
-          <td>2:30 PM</td>
-          <td>1 hour, 30 minutes</td>
-        </tr>
-        <tr>
-          <td><b>Total</b></td>
-          <td></td>
-          <td></td>
-          <td>2 hours, 30 minutes</td>
-        </tr>
-      </table>
+        {{/each}}
+
+    </table>
     </div>
 </div>

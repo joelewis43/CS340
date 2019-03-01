@@ -221,7 +221,7 @@ app.get('/register', function (req, res) {
   Title:        Clock in and out form
   Route:        /clockIO
   Written By:   Joseph Lewis
-  Description:  
+  Description:  Renders the clock in form
 ***********************************************************************/
 app.get('/clockIO', function (req, res) {
 
@@ -234,28 +234,44 @@ app.get('/clockIO', function (req, res) {
   Title:        Clock in and out form handler
   Route:        /register
   Written By:   Joseph Lewis
-  Description:
+  Description:  Inserts the employees shift to the time_logs relation
+  WARNINGS:     VID is hardcoded, change once we can reference VID
+                from session
 ***********************************************************************/
 app.post('/clockIO', function (req, res) {
 
+  //build global context
   let context = globalContext(req);
-  let sql = mysql.format('INSERT INTO time_logs (vendor_id, time_in, time_out) VALUES (?, ?, ?)',
-    [req.session.id, req.body.timeIn, req.body.timeOut || null]);
 
-  console.log(sql);
+  //build todays date
+  let today = new Date();
+  let day = today.getDate();
+  let month = today.getMonth() + 1;
+  let year = today.getFullYear();
+  let date = year + "-" + month + "-" + day;
 
-  /*pool.query(sql, function(error, results, fields){
-    if(error){
-      console.log(error);
+  //convert in and out times to sql data format
+  let tIn = date + " " + req.body.timeIn + ":00";
+  let tOut = date + " " + req.body.timeOut + ":00";
+
+  //build query string with input from clock IO form
+  let sql = mysql.format('INSERT INTO time_logs (vendor_id, time_in, time_out) VALUES (?, ?, ?)', [1, tIn, tOut]);
+
+  //insert time log
+  pool.query(sql, function(error, results, fields){
+    if (error) {
+      let context = globalContext(req);
       res.render('500', context);
+      console.log(error);
       return;
     }
-    res.writeHead('302', {
-      Location: '/'
-    });
-    res.redirect('/clockIO');
-  });*/
-  res.redirect('/clockIO');
+
+    //set success flag
+    context.success = 1;
+
+    //render the clock IO form page
+    res.render('clockIO', context);
+  });  
 });
 
 /***********************************************************************

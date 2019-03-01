@@ -1,16 +1,19 @@
 <div>
-
     <h1 style="padding-bottom: 25px">Clock your employee hours</h1>
+
+    {{#if success}}
+    <h3>Shift added!</h3>
+    {{/if}}
 
     <div class="ui segment">
       <form class="ui form" action="/clockIO" method="post">
         <div>
           <label>Time in</label>
-          <input type="time" name="timeIn" placeholder="12:00 AM">
+          <input type="time" name="timeIn" required>
         </div>
         <div>
           <label>Time out</label>
-          <input type="time" name="timeOut" placeholder="12:00 AM">
+          <input type="time" name="timeOut" required>
         </div>
         <input class="ui submit button" type="submit"/>
       </form>
