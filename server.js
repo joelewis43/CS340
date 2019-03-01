@@ -7,14 +7,18 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var pool = mysql.createPool({
   connectionLimit: 10,
-  host: 'localhost',
-  user: 'root',
-  password: 'mSeiais92bses',
-  database: 'antique_shop',
+  //host: 'localhost',
+  //user: 'root',
+  //password: 'mSeiais92bses',
+  //database: 'antique_shop',
   //host: 'classmysql.engr.oregonstate.edu',
   //user: 'cs340_lewisjos',
   //password: '2226',
   //database: 'cs340_lewisjos',
+  host: 'classmysql.engr.oregonstate.edu',
+  user: 'cs340_guyera',
+  password: '0615',
+  database: 'cs340_guyera',
   dateStrings: true
 });
 app.engine('handlebars', handlebars.engine);
