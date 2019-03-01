@@ -14,11 +14,11 @@ var pool = mysql.createPool({
   host: 'classmysql.engr.oregonstate.edu',
   user: 'cs340_lewisjos',
   password: '2226',
-  database: 'cs340_lewisjos'
+  database: 'cs340_lewisjos',
+  dateStrings: true
 });
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
-//app.set('port', 7823);
 app.set('port', 7824);
 app.use(express.static(__dirname + '/public'));
 app.use(session({ secret: 'SuperSecretPassword' }));
@@ -242,15 +242,8 @@ app.post('/clockIO', function (req, res) {
 
   //build global context
   let context = globalContext(req);
-<<<<<<< HEAD
-=======
   let sql = mysql.format('INSERT INTO time_logs (vendor_id, time_in, time_out) VALUES (?, ?, ?)',
-<<<<<<< HEAD
     [req.session.vendorID, req.body.timeIn, req.body.timeOut || null]);
->>>>>>> c85543f16ec363bfad7903806df8b38c4196511d
-=======
-    [req.session.id, req.body.timeIn, req.body.timeOut || null]);
->>>>>>> 537486bdac415af66278d03412047ebd60e184cd
 
   //build todays date
   let today = new Date();
@@ -264,7 +257,7 @@ app.post('/clockIO', function (req, res) {
   let tOut = date + " " + req.body.timeOut + ":00";
 
   //build query string with input from clock IO form
-  let sql = mysql.format('INSERT INTO time_logs (vendor_id, time_in, time_out) VALUES (?, ?, ?)', [1, tIn, tOut]);
+  sql = mysql.format('INSERT INTO time_logs (vendor_id, time_in, time_out) VALUES (?, ?, ?)', [1, tIn, tOut]);
 
   //insert time log
   pool.query(sql, function(error, results, fields){
@@ -291,9 +284,66 @@ app.post('/clockIO', function (req, res) {
 ***********************************************************************/
 app.get('/timesheet', function (req, res) {
 
+  //build global context
   let context = globalContext(req);
 
-  res.render('timesheet', context);
+  //build query to select the vendors timesheet
+  let sql = mysql.format("SELECT time_in, time_out, TIMESTAMPDIFF(MINUTE, time_in, time_out) AS length FROM time_logs WHERE vendor_id=?", [1]);
+
+  //select time logs
+  pool.query(sql, function(error, results, fields){
+    if (error) {
+      let context = globalContext(req);
+      res.render('500', context);
+      console.log(error);
+      return;
+    }
+
+    let timeIn;
+    let timeOut;
+    let date;
+    let length;
+    context.times = [];
+    for (let i=0; i<results.length; i++) {
+
+      //calculate length (provided in minutes between shift)
+      length = (results[i].length/60).toFixed(2);
+
+      //parse the time object for the hour and minutes and map to an integer
+      timeIn = results[i].time_in.split(/[ :]/).slice(1,3).map(x => parseInt(x));
+      timeOut = results[i].time_out.split(/[ :]/).slice(1,3).map(x => parseInt(x));
+      date = results[i].time_in.split(' ')[0];
+
+      //check if time in hour is greater than 12
+      if (timeIn[0] > 12) {
+        timeIn[0] -= 12;
+        timeIn.push("PM");
+      }
+      else {
+        timeIn.push("AM");
+      }
+
+      //check if time out hour is greater than 12
+      if (timeOut[0] > 12) {
+        timeOut[0] -= 12;
+        timeOut.push("PM");
+      }
+      else {
+        timeOut.push("AM");
+      }
+
+      //convert array to string
+      timeIn = timeIn[0].toString() + ":" + timeIn[1].toString() + " " + timeIn[2];
+      timeOut = timeOut[0].toString() + ":" + timeOut[1].toString() + " " + timeOut[2];
+
+      //push values to context
+      context.times.push({date, in: timeIn, out: timeOut, length});
+      
+    }
+
+  
+    res.render('timesheet', context);
+  });
 });
 
 /***********************************************************************
