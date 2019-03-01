@@ -7,14 +7,18 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var pool = mysql.createPool({
   connectionLimit: 10,
-  // host: 'localhost',
-  // user: 'root',
-  // password: 'mSeiais92bses',
-  // database: 'antique_shop'
+  //host: 'localhost',
+  //user: 'root',
+  //password: 'mSeiais92bses',
+  //database: 'antique_shop',
+  //host: 'classmysql.engr.oregonstate.edu',
+  //user: 'cs340_lewisjos',
+  //password: '2226',
+  //database: 'cs340_lewisjos',
   host: 'classmysql.engr.oregonstate.edu',
-  user: 'cs340_lewisjos',
-  password: '2226',
-  database: 'cs340_lewisjos',
+  user: 'cs340_guyera',
+  password: '0615',
+  database: 'cs340_guyera',
   dateStrings: true
 });
 app.engine('handlebars', handlebars.engine);
@@ -46,7 +50,8 @@ function globalContext(req) {
     vendor: req.session.vendor,
     customer: req.session.customer,
     name: req.session.name,
-    id: req.session.id
+    vendorID: req.session.vendorID,
+    customerID: req.session.customerID
   }
 }
 
@@ -73,12 +78,13 @@ function isEmpty(obj) {
   Title:        Homepage
   Route:        /
   Written By:   Alexander Guyer
-  Description:
+  Description:  Loads home page including table of purchasable items (spaceItems)
+  		as well as all items (only if you're a vendor)
 ***********************************************************************/
 app.get('/', function (req, res) {
-
   let context = globalContext(req);
 
+  //get list of purchasable items (spaceItems) from DB
   let sql = req.query.search != undefined ? mysql.format('SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
 
   pool.query(sql, function (error, results, fields) {
@@ -86,11 +92,16 @@ app.get('/', function (req, res) {
       res.render('500', context);
       return;
     }
+
+    //init array of spaceItems in context
     context.spaceItem = [];
     for (let i = 0; i < results.length; i++) {
+      //push each item from DB into context array for rendering
       context.spaceItem.push({ name: results[i].name, description: results[i].description, cost: results[i].cost.toString(), spaceID: results[i].space_id.toString() });
     }
-    if (req.session.vendor == 1) {
+
+    if (req.session.vendor == 1) {//If they're a vendor
+      //Render list of all items as well, to see nonpurchasable items and assign items to spaces
       let sql = req.query.search != undefined ? mysql.format('SELECT name, description, id FROM items WHERE items.name LIKE ? OR items.description LIKE ? ORDER BY name', ['%' + req.query.search + '%', '%' + req.query.search + '%']) : 'SELECT name, description, id FROM items';
 
       pool.query(sql, function (error, results, fields) {
@@ -98,31 +109,38 @@ app.get('/', function (req, res) {
           res.render('500', context);
           return;
         }
+
+	//init array of purchasable items
         context.item = [];
         for (let i = 0; i < results.length; i++) {
-          context.item.push(results[i]);
+          //push each item into context array for rendering
+	  context.item.push(results[i]);
         }
-        res.render('home', context);
+        res.render('home', context);//render page with purchasable items and all items
       });
     } else {
-      res.render('home', context);
+      res.render('home', context);//render page just with purchasable items
     }
   });
 });
+
 
 /***********************************************************************
   Title:        Log In
   Route:        /logIn
   Written By:   Alexander Guyer
-  Description:
+  Description:  Displays login page, unless query param is set,
+  		in which case it logs the user in and redirects to home
 ***********************************************************************/
 app.get('/logIn', function (req, res) {
 
   //upon successful log in, set session flag
   //and redirect user to home page
-  if (req.query.logIn) {
-    if (req.query.accType == "employee") {
+  if (req.query.logIn) {//if the query param is set, log the user in
+    if (req.query.accType == "employee") {//log in vendor
+      //Check if the user exists with this id
       let sql = mysql.format('SELECT (COUNT(*) > 0) AS auth FROM vendors WHERE id=? AND first_name=?', [parseInt(req.query.ID), req.query.Fname]);
+
       pool.query(sql, function (error, results, fields) {
         if (error) {
           let context = globalContext(req);
@@ -130,25 +148,32 @@ app.get('/logIn', function (req, res) {
           console.log(error);
           return;
         }
+
+	//if the count is greater than zero, so the user exists / valid credentials
         if (results[0].auth) {
+	  //store login values in session object
           req.session.logIn = req.query.logIn || 0;
           req.session.name = req.query.Fname || null;
-          req.session.id = parseInt(req.query.ID);
+          req.session.vendorID = parseInt(req.query.ID);
           req.session.vendor = 1;
+
+	  //redirect to home
           res.writeHead(302, {
             'Location': '/'
           });
           res.end();
         }
-        else {
+        else {//invalid credentials
           let context = globalContext(req);
-          context.failedAuth = 1;
-          res.render('logIn', context);
+          context.failedAuth = 1;//set failedAuth to display error message
+          res.render('logIn', context);//render page with error message
         }
       });
     }
     else {
+      //Check if customer of these credentials exists
       let sql = mysql.format('SELECT (COUNT(*) > 0) AS auth FROM customers WHERE id=? AND first_name=?', [parseInt(req.query.ID), req.query.Fname]);
+      
       pool.query(sql, function (error, results, fields) {
         if (error) {
           let context = globalContext(req);
@@ -156,20 +181,24 @@ app.get('/logIn', function (req, res) {
           console.log(error);
           return;
         }
+
+	//if the credentials are valid
         if (results[0].auth) {
-          console.log()
-          req.session.logIn = req.query.logIn || 0;
+          //store login information in session object
+	  req.session.logIn = req.query.logIn || 0;
           req.session.name = req.query.Fname || null;
           req.session.customer = 1;
-          req.session.id = parseInt(req.query.ID);
+          req.session.customerID = parseInt(req.query.ID);
+
+	  //redirect to home
           res.writeHead(302, {
             'Location': '/'
           });
           res.end();
-        } else {
+        } else {//credentials invalid
           let context = globalContext(req);
-          context.failedAuth = 1;
-          res.render('logIn', context);
+          context.failedAuth = 1;//record flag for error message
+          res.render('logIn', context);//render page with error message
         }
       });
     }
@@ -196,6 +225,8 @@ app.get('/logOut', function (req, res) {
   req.session.customer = 0;
   req.session.vendor = 0;
   req.session.name = 0;
+  req.session.vendorID = -1;
+  req.session.customerID = -1;
 
   res.writeHead(302, {
     'Location': '/'
@@ -207,8 +238,8 @@ app.get('/logOut', function (req, res) {
 /***********************************************************************
   Title:        Register
   Route:        /register
-  Written By:   
-  Description:
+  Written By:   Alexander Guyer
+  Description:  Loads register page
 ***********************************************************************/
 app.get('/register', function (req, res) {
 
@@ -355,20 +386,26 @@ app.get('/timesheet', function (req, res) {
   Title:        Meet Customers
   Route:        /meetCustomers
   Written By:   Alexander Guyer
-  Description:
+  Description:  Displays list of existing customers
 ***********************************************************************/
 app.get('/meetCustomers', function (req, res) {
-
   let context = globalContext(req);
+
+  //get customers from DB
   pool.query('SELECT id, first_name, last_name, rewards_points FROM customers', function (error, results, fields) {
     if (error) {
       res.render('500', context);
       return;
     }
+
+    //init context customer array
     context.customers = [];
     for (let i = 0; i < results.length; i++) {
+      //push each customer into array
       context.customers.push({ id: results[i].id, name: results[i].first_name + " " + results[i].last_name, rewardsPoints: results[i].rewards_points });
     }
+
+    //render page with the customer array
     res.render('meetCustomers', context);
   });
 });
@@ -587,7 +624,7 @@ app.get('/Purchases', function (req, res) {
 /***********************************************************************
   Title:        Rewards
   Route:        /Rewards
-  Written By:   
+  Written By:   Joseph Lewis
   Description:  Displays the customers current rewards
 ***********************************************************************/
 app.get('/Rewards', function (req, res) {
@@ -688,10 +725,12 @@ app.post('/addTransaction', function (req, res) {
   Title:        Create Item Handler
   Route:        /createItem
   Written By:   Alexander Guyer
-  Description:  
+  Description:  Adds an item to the database
 ***********************************************************************/
 app.post('/createItem', function (req, res) {
   let context = globalContext(req);
+
+  //insert item in DB
   var sql = mysql.format('INSERT INTO items(name, description) VALUE(?, ?)', [req.body.name, req.body.description]);
   pool.query(sql, function (error, results, fields) {
     if (error) {
@@ -699,6 +738,8 @@ app.post('/createItem', function (req, res) {
       res.render('500', context);
       return;
     }
+
+    //redirect to home to reload page
     res.writeHead('302', {
       Location: '/'
     });
@@ -710,10 +751,12 @@ app.post('/createItem', function (req, res) {
   Title:        Create Space Item Handler
   Route:        /createSpaceItem
   Written By:   Alexander Guyer
-  Description:  
+  Description:  Makes an existing item purchasable (by creating a spaceItem)
 ***********************************************************************/
 app.post('/createSpaceItem', function (req, res) {
   let context = globalContext(req);
+
+  //insert into DB
   var sql = mysql.format('INSERT INTO space_items(space_id, item_id, unit_price) VALUE(?, ?, ?)', [req.body.space_id, req.body.item_id, req.body.cost]);
   pool.query(sql, function (error, results, fields) {
     if (error) {
@@ -721,6 +764,8 @@ app.post('/createSpaceItem', function (req, res) {
       res.render('500', context);
       return;
     }
+
+    //redirect to home to reload page
     res.writeHead('302', {
       Location: '/'
     });
@@ -732,44 +777,85 @@ app.post('/createSpaceItem', function (req, res) {
   Title:        Registration Handler
   Route:        /register
   Written By:   Alexander Guyer
-  Description:  
+  Description:  Registers / creates a new customer or vendor in the DB
 ***********************************************************************/
 app.post('/register', function (req, res) {
   let context = globalContext(req);
-  if (req.body.accType == "vendor") {
-    var sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
+ 
+  if (req.body.accType == "vendor") {//register vendor
+    let sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
+    
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
         res.render('500', context);
         return;
       }
+
+      //store session login information
       req.session.logIn = 1;
       req.session.name = req.body.Fname || null;
       req.session.vendor = 1;
-      res.writeHead('302', {
-        Location: "/"
+
+      //get the id of the inserted vendor
+      let sql = mysql.format('SELECT id FROM vendors WHERE first_name=? AND last_name=? AND employed=? ORDER BY id DESC', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
+      pool.query(sql, function(error, results, fields){
+        if(error) {
+	  console.log(error);
+	  res.render('500', context);
+	  return;
+	} else if (results.length == 0) {
+	  res.render('500', context);
+	  return;
+	}
+
+	//store the vendor ID in the session object
+	req.session.vendorID = results[0].id;
+	res.writeHead('302', {//redirect to home
+          Location: "/"
+        });
+        res.end();
       });
-      res.end();
     });
-  } else {
-    var sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
+
+  } else {//register customer
+    let sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
+    
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
         res.render('500', context);
         return;
       }
+
+      //store session login information
       req.session.logIn = 1;
       req.session.name = req.body.Fname || null;
       req.session.customer = 1;
-      res.writeHead('302', {
-        Location: "/"
+
+      //get the inserted customer id
+      let sql = mysql.format('SELECT id FROM customers WHERE first_name=? AND last_name=? AND phone_number=? ORDER BY id DESC', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
+      pool.query(sql, function(error, results, fields){
+        if(error) {
+	  console.log(error);
+	  res.render('500', context);
+	  return;
+	} else if (results.length == 0) {
+	  res.render('500', context);
+	  return;
+	}
+
+	//store customer ID in session object
+	req.session.customerID = results[0].id;
+	res.writeHead('302', {
+          Location: "/"
+        });
+        res.end();
       });
-      res.end();
     });
   }
 });
+
 /*******************************ROUTE HANDLERS********************************/
 
 
