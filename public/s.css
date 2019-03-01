@@ -93,7 +93,7 @@ body {
 }
 
 #failedAuth{
-  text-color: red;
+  color: red;
 }
 
 #vendorRegContainer{
