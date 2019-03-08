@@ -7,10 +7,10 @@ var bodyParser = require('body-parser');
 var mysql = require('mysql');
 var pool = mysql.createPool({
   connectionLimit: 10,
-  //host: 'localhost',
-  //user: 'root',
-  //password: 'mSeiais92bses',
-  //database: 'antique_shop',
+  // host: 'localhost',
+  // user: 'root',
+  // password: 'mSeiais92bses',
+  // database: 'antique_shop',
   //host: 'classmysql.engr.oregonstate.edu',
   //user: 'cs340_lewisjos',
   //password: '2226',
@@ -85,7 +85,7 @@ app.get('/', function (req, res) {
   let context = globalContext(req);
 
   //get list of purchasable items (spaceItems) from DB
-  let sql = req.query.search != undefined ? mysql.format('SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
+  let sql = req.query.search != undefined ? mysql.format('SELECT items.id, items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.id, items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
 
   pool.query(sql, function (error, results, fields) {
     if (error) {
@@ -97,7 +97,7 @@ app.get('/', function (req, res) {
     context.spaceItem = [];
     for (let i = 0; i < results.length; i++) {
       //push each item from DB into context array for rendering
-      context.spaceItem.push({ name: results[i].name, description: results[i].description, cost: results[i].cost.toString(), spaceID: results[i].space_id.toString() });
+      context.spaceItem.push({ id: results[i].id, name: results[i].name, description: results[i].description, cost: results[i].cost.toString(), spaceID: results[i].space_id.toString() });
     }
 
     if (req.session.vendor == 1) {//If they're a vendor
@@ -173,7 +173,7 @@ app.get('/logIn', function (req, res) {
     else {
       //Check if customer of these credentials exists
       let sql = mysql.format('SELECT (COUNT(*) > 0) AS auth FROM customers WHERE id=? AND first_name=?', [parseInt(req.query.ID), req.query.Fname]);
-      
+
       pool.query(sql, function (error, results, fields) {
         if (error) {
           let context = globalContext(req);
@@ -304,7 +304,7 @@ app.post('/clockIO', function (req, res) {
 
     //render the clock IO form page
     res.render('clockIO', context);
-  });  
+  });
 });
 
 /***********************************************************************
@@ -374,10 +374,10 @@ app.get('/timesheet', function (req, res) {
 
       //push values to context
       context.times.push({date, in: timeIn, out: timeOut, length});
-      
+
     }
 
-  
+
     res.render('timesheet', context);
   });
 });
@@ -651,7 +651,7 @@ app.get('/addTransaction', function (req, res) {
 
   //empty query string when the page first loads
   if (isEmpty(req.query)) {
-    
+
     //render the add transaction page
     //asks how many line items are on the sale
     context.numItems = null;
@@ -673,7 +673,7 @@ app.get('/addTransaction', function (req, res) {
       context.numItems = [];
       for (var i = 0; i < req.query.numItems; i++)
         context.numItems.push(0);
-      
+
       //render the Add Transaction page with one form field per line item
       res.render('addTransaction', context);
     });
@@ -781,10 +781,10 @@ app.post('/createSpaceItem', function (req, res) {
 ***********************************************************************/
 app.post('/register', function (req, res) {
   let context = globalContext(req);
- 
+
   if (req.body.accType == "vendor") {//register vendor
     let sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
-    
+
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
@@ -820,7 +820,7 @@ app.post('/register', function (req, res) {
 
   } else {//register customer
     let sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
-    
+
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
@@ -854,6 +854,39 @@ app.post('/register', function (req, res) {
       });
     });
   }
+});
+
+//PUT HTTP method is for resource updates. Update space item cost through this controller
+app.post('/spaceItem', function (req, res) {
+    let context = globalContext(req);
+    let spaceID = parseInt(req.body.spaceID);
+    let itemID = parseInt(req.body.itemID);
+    let method = req.body.method;
+
+    if(method == "Update"){
+        let cost = parseFloat(req.body.cost);
+
+        let sql = mysql.format('UPDATE space_items SET unit_price=? WHERE space_id=? AND item_id=?', [cost, spaceID, itemID]);
+
+        pool.query(sql, function(error, results, fields) {
+            if(error) {
+                console.log(error);
+                res.render('500', context)
+                return;
+            }
+
+            res.writeHead('302', {
+                Location: "/"
+            });
+            res.end();
+        });
+    } else {
+        //TODO Joseph: Write the code for deleting a space item here.
+        res.writeHead('302', {
+            Location: "/"
+        });
+        res.end();
+    }
 });
 
 /*******************************ROUTE HANDLERS********************************/
