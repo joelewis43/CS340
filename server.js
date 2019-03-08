@@ -856,7 +856,7 @@ app.post('/register', function (req, res) {
   }
 });
 
-//PUT HTTP method is for resource updates. Update space item cost through this controller
+//PUT HTTP method is for resource updates, but forms cannot send PUTs. Update space item cost through this controller
 app.post('/spaceItem', function (req, res) {
     let context = globalContext(req);
     let spaceID = parseInt(req.body.spaceID);
