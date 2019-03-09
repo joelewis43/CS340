@@ -10,15 +10,6 @@ var pool = mysql.createPool({
   // host: 'localhost',
   // user: 'root',
   // password: 'mSeiais92bses',
-<<<<<<< HEAD
-  // database: 'antique_shop'
-=======
-  // database: 'antique_shop',
-  //host: 'classmysql.engr.oregonstate.edu',
-  //user: 'cs340_lewisjos',
-  //password: '2226',
-  //database: 'cs340_lewisjos',
->>>>>>> cbc01468b45d46c259bf131841fb7a38da49dd4a
   host: 'classmysql.engr.oregonstate.edu',
   user: 'cs340_lewisjos',
   password: '2226',
@@ -27,7 +18,7 @@ var pool = mysql.createPool({
 });
 app.engine('handlebars', handlebars.engine);
 app.set('view engine', 'handlebars');
-app.set('port', 7824);
+app.set('port', 7823);
 app.use(express.static(__dirname + '/public'));
 app.use(session({ secret: 'SuperSecretPassword' }));
 app.use(bodyParser.urlencoded({
@@ -87,12 +78,8 @@ app.get('/', function (req, res) {
 
   let context = globalContext(req);
 
-<<<<<<< HEAD
-  let sql = req.query.search != undefined ? mysql.format('SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
-=======
   //get list of purchasable items (spaceItems) from DB
   let sql = req.query.search != undefined ? mysql.format('SELECT items.id, items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id WHERE items.name LIKE ? ORDER BY name', ['%' + req.query.search + '%']) : 'SELECT items.id, items.name, items.description, space_items.unit_price AS cost, space_items.space_id FROM items INNER JOIN space_items ON items.id = space_items.item_id ORDER BY name';
->>>>>>> cbc01468b45d46c259bf131841fb7a38da49dd4a
 
   pool.query(sql, function (error, results, fields) {
     if (error) {
@@ -101,12 +88,8 @@ app.get('/', function (req, res) {
     }
     context.spaceItem = [];
     for (let i = 0; i < results.length; i++) {
-<<<<<<< HEAD
-      context.spaceItem.push({ name: results[i].name, description: results[i].description, cost: results[i].cost.toString(), spaceID: results[i].space_id.toString() });
-=======
       //push each item from DB into context array for rendering
       context.spaceItem.push({ id: results[i].id, name: results[i].name, description: results[i].description, cost: results[i].cost.toString(), spaceID: results[i].space_id.toString() });
->>>>>>> cbc01468b45d46c259bf131841fb7a38da49dd4a
     }
     if (req.session.vendor == 1) {
       let sql = req.query.search != undefined ? mysql.format('SELECT name, description, id FROM items WHERE items.name LIKE ? OR items.description LIKE ? ORDER BY name', ['%' + req.query.search + '%', '%' + req.query.search + '%']) : 'SELECT name, description, id FROM items';
@@ -167,10 +150,6 @@ app.get('/logIn', function (req, res) {
     }
     else {
       let sql = mysql.format('SELECT (COUNT(*) > 0) AS auth FROM customers WHERE id=? AND first_name=?', [parseInt(req.query.ID), req.query.Fname]);
-<<<<<<< HEAD
-=======
-
->>>>>>> cbc01468b45d46c259bf131841fb7a38da49dd4a
       pool.query(sql, function (error, results, fields) {
         if (error) {
           let context = globalContext(req);
@@ -758,15 +737,10 @@ app.post('/createSpaceItem', function (req, res) {
 ***********************************************************************/
 app.post('/register', function (req, res) {
   let context = globalContext(req);
-<<<<<<< HEAD
-  if (req.body.accType == "vendor") {
-    var sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
-=======
 
   if (req.body.accType == "vendor") {//register vendor
     let sql = mysql.format('INSERT INTO vendors (first_name, last_name, employed) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.employed != undefined ? true : false]);
 
->>>>>>> cbc01468b45d46c259bf131841fb7a38da49dd4a
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
@@ -781,15 +755,10 @@ app.post('/register', function (req, res) {
       });
       res.end();
     });
-<<<<<<< HEAD
-  } else {
-    var sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
-=======
 
   } else {//register customer
     let sql = mysql.format('INSERT INTO customers (first_name, last_name, phone_number) VALUE (?, ?, ?)', [req.body.Fname, req.body.Lname, req.body.Pnumber]);
 
->>>>>>> cbc01468b45d46c259bf131841fb7a38da49dd4a
     pool.query(sql, function (error, results, fields) {
       if (error) {
         console.log(error);
@@ -806,8 +775,6 @@ app.post('/register', function (req, res) {
     });
   }
 });
-<<<<<<< HEAD
-=======
 
 //PUT HTTP method is for resource updates, but forms cannot send PUTs. Update space item cost through this controller
 app.post('/spaceItem', function (req, res) {
@@ -833,8 +800,24 @@ app.post('/spaceItem', function (req, res) {
             });
             res.end();
         });
+    }
+    else if (method == "Delete") {
+
+      let sql = mysql.format('DELETE FROM space_items WHERE space_id=? AND item_id=?', [spaceID, itemID]);
+
+      pool.query(sql, function(error, results, fields) {
+        if(error) {
+            console.log(error);
+            res.render('500', context)
+            return;
+        }
+
+        res.writeHead('302', {
+            Location: "/"
+        });
+        res.end();
+      });
     } else {
-        //TODO Joseph: Write the code for deleting a space item here.
         res.writeHead('302', {
             Location: "/"
         });
@@ -842,7 +825,6 @@ app.post('/spaceItem', function (req, res) {
     }
 });
 
->>>>>>> cbc01468b45d46c259bf131841fb7a38da49dd4a
 /*******************************ROUTE HANDLERS********************************/
 
 
