@@ -24,7 +24,7 @@
 
                 <input class="ui submit button" type="submit"/>
             </form>
-	
+
 	    <h2>Add an item to an existing space</h3>
             <form class="ui form" action="/createSpaceItem" method="POST">
                 <div>
@@ -34,7 +34,7 @@
                 </div>
 
                 <input class="ui submit button" type="submit"/>
-            </form> 
+            </form>
 	</div>
     {{/if}}
 
@@ -47,7 +47,7 @@
 		    <th>Description</th>
 		    <th>ID</th>
 		</tr>
-		
+
 		{{#each item}}
 		    <tr>
 		        <td>{{this.name}}</td>
@@ -56,25 +56,27 @@
 		    </tr>
 		{{/each}}
 	    </table>
-            
+
 	    <h2>Items for Sale</h2>
 	    <table class="itemTable" id="table">
                 <tr>
                     <th>Name</th>
                     <th>Description</th>
                     <th>Cost</th>
-		    <th>Space ID</th>
+		            <th>Space ID</th>
                 </tr>
 
                 {{#each spaceItem}}
                     <tr>
-                        <form class="ui form">
+                        <form class="ui form" action="/spaceItem" method="post" >
+                            <input type="hidden" name="itemID" value="{{this.id}}" />
+                            <input type="hidden" name="spaceID" value="{{this.spaceID}}" />
                             <td>{{this.name}}</td>
                             <td>{{this.description}}</td>
-                            <td><input type="text" name="cost" value="${{this.cost}}"></input></td>
+                            <td>$<input type="text" name="cost" value="{{this.cost}}"></input></td>
                             <td>{{this.spaceID}}</td>
-			    <td><div class="ui submit button">Update</td>
-                            <td><div class="ui submit button">Delete</td>
+			                <td><input class="ui submit button" type="submit" name="method" value="Update" /></td>
+                            <td><input class="ui submit button" type="submit" name="method" value="Delete" /></td>
                         </form>
                     </tr>
                 {{/each}}
